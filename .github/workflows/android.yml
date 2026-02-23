@@ -1,0 +1,48 @@
+name: Build Android (APK + AAB)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Cache Buildozer
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.buildozer
+          ~/.gradle
+        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
+        restore-keys: |
+          ${{ runner.os }}-buildozer-
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y zip unzip openjdk-17-jdk python3-pip \
+        build-essential git python3-setuptools python3-wheel \
+        libffi-dev libssl-dev
+
+    - name: Install Buildozer
+      run: |
+        pip install --upgrade pip
+        pip install buildozer cython
+
+    - name: Build Debug APK
+      run: buildozer -v android debug
+
+    - name: Build Release AAB
+      run: buildozer android release
+
+    - name: Upload APK & AAB
+      uses: actions/upload-artifact@v3
+      with:
+        name: Android-Build
+        path: bin/*
