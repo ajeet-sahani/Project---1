@@ -10,39 +10,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name:  Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    - name:  Cache Buildozer
-      uses: actions/cache@v4
+    - uses: actions/cache@v4
       with:
         path: |
           ~/.buildozer
           ~/.gradle
         key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
-        restore-keys: |
-          ${{ runner.os }}-buildozer-
 
-    - name:  Install dependencies
+    - name: Install dependencies
       run: |
         sudo apt update
         sudo apt install -y zip unzip openjdk-17-jdk python3-pip \
         build-essential git python3-setuptools python3-wheel \
         libffi-dev libssl-dev libsqlite3-dev zlib1g-dev
 
-    - name:  Install Buildozer
+    - name: Install Buildozer
       run: |
         python3 -m pip install --upgrade pip
         pip install buildozer cython
 
-    - name:  Build Debug APK
+    - name: Accept licenses
+      run: yes | buildozer android update
+
+    - name: Build Debug APK
       run: buildozer -v android debug
 
-    - name:  Build Release AAB
-      run: buildozer -v android release
-
-    - name:  Upload APK & AAB
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: Android-Build
-        path: bin/*
+        name: APK
+        path: bin/*.apk
